@@ -1,0 +1,41 @@
+#!/usr/bin/env php
+
+<?php
+
+use Doctrine\DBAL\Schema\Schema;
+
+define('APP', __DIR__);
+$argv = $_SERVER['argv'];
+$commandName = $argv[1] ?? null;
+
+if (!$commandName || !in_array($commandName, ['up', 'down'])) {
+    echo "Используйте команду up/down" . PHP_EOL;
+    exit(0);
+}
+
+require APP . '/vendor/autoload.php';
+
+try {
+    $connection = require APP . '/src/service.php';
+} catch (Exception $exception) {
+    echo 'Error connection to DB: ' . $exception->getMessage() . PHP_EOL;
+    exit();
+}
+
+$schemaManager = $connection->createSchemaManager();
+$schema = new Schema();
+
+$databaseFiles = new \DirectoryIterator(__DIR__.'/database');
+foreach ($databaseFiles as $databaseFile) {
+    if (!$databaseFile->isFile()) {
+        continue;
+    }
+    $databaseMigration = require APP . '/database/' . $databaseFile;
+    call_user_func_array(array($databaseMigration, $commandName), array($schemaManager, $schema));
+}
+
+$sqlArray = $schema->toSql($connection->getDatabasePlatform());
+if (!$sqlArray) exit(0);
+foreach ($sqlArray as $sql) {
+    $connection->executeQuery($sql);
+}
