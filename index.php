@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Product;
 use GuzzleHttp\Client;
 
 define('APP', __DIR__);
@@ -22,31 +23,17 @@ $stringBody = (string)$body;
 $products = json_decode($stringBody, true);
 $queryBuilder = $connection->createQueryBuilder();
 foreach ($products['products'] as $product) {
-    $queryBuilder
-        ->insert('products')
-        ->values([
-            'name' => ':name',
-            'description' => ':description',
-            'category' => ':category',
-            'price' => ':price',
-            'discount' => ':discount',
-            'rating' => ':rating',
-            'stock' => ':stock',
-            'brand' => ':brand',
-            'sku' => ':sku',
-            'thumbnail' => ':thumbnail',
-        ])
-        ->setParameters([
-            'name' => $product['title'],
-            'description' => $product['description'],
-            'category' => $product['category'],
-            'price' => $product['price'],
-            'discount' => $product['discountPercentage'],
-            'rating' => $product['rating'],
-            'stock' => $product['stock'],
-            'brand' => $product['brand'],
-            'sku' => $product['sku'],
-            'thumbnail' => $product['thumbnail'],
-        ])
-        ->executeQuery();
+    $productObject = new Product($queryBuilder);
+    $productObject->setName($product['title']);
+    $productObject->setDescription($product['description']);
+    $productObject->setCategory($product['category']);
+    $productObject->setPrice($product['price']);
+    $productObject->setDiscount($product['discountPercentage']);
+    $productObject->setRating($product['rating']);
+    $productObject->setStock($product['stock']);
+    $productObject->setBrand($product['brand']);
+    $productObject->setSku($product['sku']);
+    $productObject->setThumbnail($product['thumbnail']);
+    $productObject->save();
+
 }
