@@ -17,6 +17,7 @@ class Product
     private string $brand;
     private string $sku;
     private string $thumbnail;
+
     public function __construct(
         private QueryBuilder $queryBuilder
     )
